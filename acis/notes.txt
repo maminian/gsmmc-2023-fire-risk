@@ -1,0 +1,20 @@
+While the API/request website is fairly 
+well documented, when it comes down to it, 
+it looks like lat/lon information is not given 
+with the outputs, nor projection data. 
+
+So, it's a bit of a non-starter. 
+But I leave the python3-ized request interface 
+and notes here.
+
+See:
+
+https://www.rcc-acis.org/docs_webservices.html
+
+and also:
+
+http://builder.rcc-acis.org/
+
+"GridData2" would have been 
+the interface that gives lat/lon data, 
+but it doesn't seem to work at first attempt.

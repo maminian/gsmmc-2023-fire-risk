@@ -13,14 +13,13 @@ in July at each California gridpoint.
 
 #######################################
 #Import modules required by Acis
-import urllib2
+import urllib
+
 import json
 #######################################
 #######################################
 #Import plotting tools
-import cairo
 import base64
-from cStringIO import StringIO
 #######################################
 #Set Acis data server
 base_url = "http://data.rcc-acis.org/"
@@ -28,17 +27,21 @@ base_url = "http://data.rcc-acis.org/"
 #Acis WebServices functions
 #######################################
 def make_request(url,params) :
-    req = urllib2.Request(url,
-    json.dumps(params),
-    {"Content-Type":"application/json"})
+    data = json.dumps(params)
+    data_bytes = bytes(data, 'utf-8') # one weird trick
+    
+    req = urllib.request.Request(url,
+    data=data_bytes,
+    headers={"Content-Type":"application/json"})
     try:
-        response = urllib2.urlopen(req)
+        response = urllib.request.urlopen(req)
         return json.loads(response.read())
-    except urllib2.HTTPError as error:
-        if error.code == 400 : print error.msg
+    except urllib.request.HTTPError as error:
+        if error.code == 400 : print(error.msg)
+    print(urllib.request.HTTPError)
 
-def GridData(params):
-    return make_request(base_url+"GridData",params)
+def GridData(params, server="GridData"):
+    return make_request(base_url+server, params)
 
 ##################################################
 #Map code using Cairo
@@ -124,22 +127,30 @@ if __name__ == "__main__":
     #Set parameters for data request
     #levels = [0.2*i for i in range(15)]
     params = {
-        "state":"ca",
-        "sdate":"20400701",
-        "edate":"20400731",
-        "grid":"6",
+        "state":"co",
+        "sdate":"20200701", # low-tech YYYYMMDD
+        "edate":"20200731",
+        "grid":1,
         "output":"json",
-        "elems":[{"name":"pcpn","smry":"sum","smry_only":1}],
-        "image":{
-            "proj":"lcc",
-            "overlays":"state",
-            "interp":"cspline",
-            "cmap":"rainbow",
-            "width":350
-            #"levels":levels
-        }
+        "elems":[{"name":"pcpn","smry":"sum"}],
     }
     #Obtain data
     data = GridData(params)
     #Generate png output
-    build_figure(data, 'CA_pcpn_map.png')
+    #build_figure(data, 'CA_pcpn_map.png')
+    
+    from matplotlib import pyplot as plt
+    import numpy as np
+    #mycm = plt.cm.inferno.copy()
+    #mycm.set_under([0,0,0,0])
+    
+    fig,ax = plt.subplots(6,5, sharex=True, sharey=True, gridspec_kw={'wspace':0.01, 'hspace':0.01})
+    for i in range(ax.shape[0]):
+        for j in range(ax.shape[1]):
+            idx = j + ax.shape[1]*i
+            
+            arr = np.array(data['data'][idx][1], dtype=float)
+            arr[arr<0] = np.nan
+            ax[i,j].pcolor(arr)
+            
+    fig.show()
