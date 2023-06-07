@@ -1,0 +1,92 @@
+clear;
+clc;
+close all
+
+N = 1000;
+
+u = zeros(N,1);
+D = zeros(N,1);
+x = linspace(-1,1,N);
+
+h = exp(-(x/.3).^2)/2;
+
+dh = gradient(h)./gradient(x);
+
+g = 9.8;
+
+ds = (x(end) - x(1)) / N;
+
+
+
+
+
+
+%%
+
+
+% forward Euler
+
+u(1) = 1;
+D(1) = 1;
+
+% u(1) = 5;
+% D(1) = 1/2;
+
+% u(1) = 4;
+% D(1) = 3;
+
+Fr = u(1)^2/(g*D(1)^2);
+
+for i=1:N-1
+    D(i+1) = D(i) + ds * (1 - g*D(i)/u(i)^2)^(-1) * g * D(i)/u(i)^2 * dh(i);
+    if D(i+1) < h(i+1) % make sure the fluid height doesn't drop below the mountain
+        D(i+1) = h(i+1);
+    end
+    u(i+1) = u(i) * (1 - (D(i+1)-D(i))/D(i));
+end
+
+
+figure;
+plot(x,D+h');
+hold on
+plot(x,h);
+
+str = ['Fr = ', num2str(Fr)];
+title(str);
+
+legend('D','h');
+
+xlabel('x');
+ylabel('y');
+
+
+
+%% RK4, ode45
+
+[x,y] = ode45(@fun,x,[2; 0]);
+
+
+function dydx = fun(x,y)
+%VDP1  Evaluate the van der Pol ODEs for mu = 1
+%
+%   See also ODE113, ODE23, ODE45.
+
+%   Jacek Kierzenka and Lawrence F. Shampine
+%   Copyright 1984-2014 The MathWorks, Inc.
+
+dydx = [-g*dh ./ (u-D./u); ];
+end
+
+
+
+
+
+
+
+
+
+
+
+
+
+
