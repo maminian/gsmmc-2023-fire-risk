@@ -19,7 +19,7 @@ def semicircle():
     _y = 0 + 1*np.sin(th)
     return _x,_y
 
-xx, yy = np.meshgrid( np.linspace(-2,4,300), np.linspace(0,4, 300) )
+xx, yy = np.meshgrid( np.linspace(-2,4,100), np.linspace(0,4,100) )
 
 p = 1.8
 b = 1
@@ -53,8 +53,10 @@ psimax = psi[mask].max()
 #psi = psi * mask
 
 # TODO: are these still valid after transforming to (x,y)?
-phix = np.gradient(phi, xx[0,:], axis=0)
-phiy = np.gradient(phi, yy[:,0], axis=1)
+phix = np.gradient(phi, xx[0,:], axis=1)
+phiy = np.gradient(phi, yy[:,0], axis=0)
+psix = np.gradient(psi, xx[0,:], axis=1)
+psiy = np.gradient(psi, yy[:,0], axis=0)
 
 mag = np.sqrt(phix**2 + phiy**2)
 mag[np.logical_not(mask)] = np.nan
@@ -85,7 +87,7 @@ ax[1].contour(xx,yy, psi,
               levels=np.linspace(psimin, psimax, LEVELS), 
               colors='k', linewidths=2)
 
-ax[2].pcolor(xx, yy, mag, cmap=plt.cm.plasma)
+cax = ax[2].pcolor(xx, yy, mag, vmin=0, cmap=plt.cm.plasma)
 
 ax[0].set(aspect='equal', title=r'$\Phi(X,Y)$')
 ax[1].set(aspect='equal', title=r'$\Psi(X,Y)$')
@@ -93,15 +95,36 @@ ax[1].set(aspect='equal', title=r'$\Psi(X,Y)$')
 
 ax[2].set(aspect='equal', title=r'$||\nabla \Phi||$')
 
+fig.colorbar(cax)
+
 for axi in ax:
     axi.grid(ls='--', lw=0.5)
-    axi.set(xlabel=r'$X$', ylabel=r'$Y$', xlim=[-2,4], ylim=[0,4])
+    axi.set(xlabel=r'$x$', ylabel=r'$y$', xlim=[-2,4], ylim=[0,4])
     # mask out the interior of circle at (p,0), radius b.
     xbathy = np.linspace(XX.min(), XX.max(), 500)
     axi.fill(*semicircle(), 
                 hatch='////', facecolor='k', zorder=100, 
                 edgecolor='r')
-    
-    
+##
 
+fig.savefig('potential_flow_verhoff_2010.pdf', bbox_inches='tight')
 fig.show()
+
+# where is the max? What is the max relative to the "far field"?
+
+speed_farfied = mag[0,0]
+speed_idx_flat = np.nanargmax(mag)
+speed_idx = np.unravel_index(speed_idx_flat, mag.shape)
+
+print("MAX SPEED RELATIVE TO UPSTREAM SPEED:")
+print("%.2f"%mag[speed_idx])
+
+phix_m = phix*mask/mag
+phiy_m = phiy*mask/mag
+ax[2].streamplot(
+    xx,
+    yy,
+    phix_m, # yeah - supposed to be (-phiy, phix); not sure what I flipped.
+    phiy_m, 
+    color='w',
+    density=0.5)
