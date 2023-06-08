@@ -6,7 +6,7 @@ N = 1000;
 
 xspan = linspace(-1,2,N);
 %h = exp(-((xspan-1)/.1).^2)/2;
-h = exp(-((xspan-1)/.1).^2)/2 + exp(-(xspan/.1).^2)/2;
+h = -exp(-((xspan-1/2)/.1).^2)/2 + exp(-(xspan/.1).^2)/2;
 dh = gradient(h)./gradient(xspan);
 g = 9.8;
 
@@ -14,30 +14,36 @@ g = 9.8;
 %% ode45 (Runge-Kutta)
 
 
-D1 = 1;
-uvals = [1/2, 2, 3, 4, 5, 6];
+u1 = 5;
+Dvals = 5; % subcritical
 %uvals = 12;
 
 figure;
 hold on
 plot(xspan,h,'LineWidth',2);
 
-for j=1:size(uvals,2)
-    u1 = uvals(j);
+for j=1:size(Dvals,2)
+    D1 = Dvals(j);
 
 
-    [xspan,y] = ode45(@(x,y) fun(x,y,xspan,dh,g), xspan, [u1; D1]);
-    
-    u = y(:,1);
-    D = y(:,2);
+    %[xspan,y] = ode45(@(x,y) fun(x,y,xspan,dh,g), xspan, [u1; D1]);
+    [xspan,y] = ode45(@(x,y) fun2(x,y,xspan,dh,g,u1,D1), xspan, u1);
+%     
+%     u = y(:,1);
+%     D = y(:,2);
+
+u = y;
+D = u1*D1./y;
     
     Fr = u.^2./(g*D);
+        hold on
     
     %subplot(3,2,j);
-    plot(xspan,D+h','LineWidth',2);
-    %plot(xspan,u,'LineWidth',2);
-    %plot(xspan,Fr,'LineWidth',2);
-    hold on
+    %plot(xspan,D+h','LineWidth',2);
+    plot(xspan,u,'LineWidth',2);
+    %plot(xspan, u.*D);
+    plot(xspan,Fr,'LineWidth',2);
+
     
 %     str = ['Fr = ', num2str(Fr)];
 %     title(str);
@@ -49,7 +55,8 @@ for j=1:size(uvals,2)
     %title('D=1, u=12, Fr=15');
     
     xlabel('x');
-    ylabel('y');
+
+    legend('topography','flow speed','Froude number');
 
     set(gca,'TickLength',[0.02, 0.05]);
     set(gca,'LineWidth',1);
@@ -116,6 +123,12 @@ function dydx = fun(x,y,xspan,dh,g)
 dh_an = interp1(xspan,dh,x);
 dydx = [-g*dh_an ./ (y(1)-y(2)./y(1)); -g*dh_an ./ (-y(1).^2./y(2)+g)];
 end
+
+function dydx_1D = fun2(x,y,xspan,dh,g,u1,D1)
+dh_an = interp1(xspan,dh,x);
+dydx_1D = -g*dh_an ./ (y-(g*u1*D1)./y.^2);
+end
+
 
 
 
