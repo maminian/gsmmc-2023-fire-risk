@@ -1,6 +1,7 @@
 Western_Wind_Dataset
 *.png
-*.DS_Store
+.DS_Store
+*.pickle
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
