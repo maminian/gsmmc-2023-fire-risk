@@ -39,7 +39,21 @@ def draw_state(myax, statename, facecolor=[0,0,0,0], edgecolor='r', linewidth=2)
     '''
     #statename = statename.lower()
     subset = gdf[gdf['NAME']==statename]
-    subset.plot(ax=ax, facecolor=facecolor, edgecolor=edgecolor, linewidth=linewidth)
+    subset.plot(ax=myax, facecolor=facecolor, edgecolor=edgecolor, linewidth=linewidth)
+    return
+    
+def draw_nation(myax, skip=['Alaska', 'Hawaii', 'Puerto Rico'], facecolor=[0,0,0,0], edgecolor='r'):
+    '''
+    Draws the contiguous 48/49 states (skip AK, HI, PR)
+    '''
+    import numpy as np
+    if skip is None:
+        skip = []
+    complement = np.setdiff1d(gdf['NAME'].values, skip)
+    mask = gdf['NAME'].isin(complement)
+    gdf[mask].plot(ax=myax, facecolor=facecolor, edgecolor=edgecolor)
+    return
+    
     
     
 if __name__=="__main__":
@@ -55,3 +69,5 @@ if __name__=="__main__":
     
     # in another file: just import "us_boundaries" 
     # and call us_boundaries.draw_state(...)
+    
+    draw_nation(ax, edgecolor=[0.2, 0.2, 0.2, 0.5])
