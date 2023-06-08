@@ -39,7 +39,7 @@ def draw_state(myax, statename, facecolor=[0,0,0,0], edgecolor='r', linewidth=2)
     '''
     #statename = statename.lower()
     subset = gdf[gdf['NAME']==statename]
-    subset.plot(ax=ax, facecolor=facecolor, edgecolor=edgecolor, linewidth=linewidth)
+    subset.plot(ax=myax, facecolor=facecolor, edgecolor=edgecolor, linewidth=linewidth)
     
     
 if __name__=="__main__":
