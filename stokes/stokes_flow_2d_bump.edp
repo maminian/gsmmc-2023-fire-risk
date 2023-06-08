@@ -1,0 +1,65 @@
+/****************************************************************************/
+/* This file is based on the tutorial stokes.edp of FreeFEM.                */
+/*                                                                          */
+/* FreeFEM is free software: you can redistribute it and/or modify          */
+/* it under the terms of the GNU Lesser General Public License as           */
+/* published by the Free Software Foundation, either version 3 of           */
+/* the License, or (at your option) any later version.                      */
+/*                                                                          */
+/* FreeFEM is distributed in the hope that it will be useful,               */
+/* but WITHOUT ANY WARRANTY; without even the implied warranty of           */
+/* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the            */
+/* GNU Lesser General Public License for more details.                      */
+/*                                                                          */
+/* You should have received a copy of the GNU Lesser General Public License */
+/* along with FreeFEM. If not, see <http://www.gnu.org/licenses/>.          */
+/****************************************************************************/
+
+load "iovtk"
+
+// Geometry (Bump)
+real A = 0.5;
+real W = 10;
+real H = 100*A/10;
+real T = 4;
+
+
+//real bump = ()[t]{
+//    return exp(-((t-T)/0.1)^2)/2;
+//};
+
+border b1(t=0,W){x=t; y=exp(-((t-T)/0.1)^2)*A; label=1;};
+border b2(t=0,1){x=W; y=(1-t)*exp(-((W-T)/0.1)^2)*A+t*H; label=2;};
+border b3(t=0,1){x=(1-t)*W; y=H; label=3;};
+border b4(t=0,1){x=0; y=(1-t)*H+t*exp(-((0-T)/0.1)^2)*A; label=4;};
+
+// Mesh
+mesh Th = buildmesh( b1(300) + b2(30) + b3(30) + b4(30));
+
+// Inflow
+real umax = 100;
+func uD = umax * (1.-((y-H)/H)^2);
+
+// Fespace
+fespace Uh(Th, P2);
+Uh u, v;
+Uh uu, vv;
+fespace Ph(Th, P1);
+Ph p, pp;
+
+// Macro
+macro Gradient(u) [dx(u), dy(u)] //
+macro Divergence(ux, uy) (dx(ux) + dy(uy)) //
+
+// Problem
+real fudgefactor = 1e6;
+solve stokes([u, v, p], [uu, vv, pp])
+  = int2d(Th)(Gradient(u)'*Gradient(uu) + Gradient(v)'*Gradient(vv)
+              - p*Divergence(uu,vv) - Divergence(u,v)*pp)
+  + int1d(Th,1)(fudgefactor * (u*N.x + v*N.y)*(uu*N.x + vv*N.y))          
+  + on(3, u=umax, v=0)
+  + on(4, u=umax, v=0)
+  ;
+
+// Plot
+savevtk("stokes.vtk",Th,[u,v,0],p,dataname="app_vel app_pre");
