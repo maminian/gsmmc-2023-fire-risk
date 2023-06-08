@@ -11,3 +11,4 @@ usb.draw_state(ax, 'New York', edgecolor='#808')
 usb.draw_state(ax, 'Vermont')
 usb.draw_state(ax, 'New Hampshire')
 fig.show()
+
