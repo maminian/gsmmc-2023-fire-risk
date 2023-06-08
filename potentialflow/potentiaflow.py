@@ -10,19 +10,22 @@ def Phi(X,Y,p,b):
 def Psi(X,Y,p,b): 
     return Y*( 1 - (p-b)**2/( (X-p)**2 + Y**2 ) )
 
-def semicircle(p, b):
+def semicircle():
     '''
     bottom boundary of domain. To be used in combo with ax.fill().
     '''
     th = np.linspace(0, np.pi, 400)
-    _x = p + b*np.cos(th)
-    _y = 0 + b*np.sin(th)
+    _x = 0 + 1*np.cos(th)
+    _y = 0 + 1*np.sin(th)
     return _x,_y
 
-XX,YY = np.meshgrid( np.linspace(-2,4), np.linspace(0,4) )
+xx, yy = np.meshgrid( np.linspace(-2,4,100), np.linspace(0,4,100) )
 
 p = 1.8
 b = 1
+
+XX = xx + xx/(xx**2 + yy**2)
+YY = yy - yy/(xx**2 + yy*2)
 
 phi = Phi(XX,YY, p,b)
 psi = Psi(XX,YY, p,b)
@@ -37,8 +40,9 @@ psi = Psi(XX,YY, p,b)
 ####
 # TODO: need to map back to physical (x,y) first.
 ####
-mask = ((XX-p)**2 + YY**2 >= b**2)
+mask = (xx**2 + yy**2 >= 1)
 
+#
 phimin = phi[mask].min()
 phimax = phi[mask].max()
 psimin = psi[mask].min()
@@ -48,10 +52,13 @@ psimax = psi[mask].max()
 #phi = phi * mask
 #psi = psi * mask
 
-phix = np.gradient(phi, XX[0,:], axis=0)
-phiy = np.gradient(phi, YY[:,0], axis=1)
+# TODO: are these still valid after transforming to (x,y)?
+phix = np.gradient(phi, xx[0,:], axis=1)
+phiy = np.gradient(phi, yy[:,0], axis=0)
+psix = np.gradient(psi, xx[0,:], axis=1)
+psiy = np.gradient(psi, yy[:,0], axis=0)
 
-mag = np.sqrt(phix[:,:]**2 + phiy[:,:]**2)
+mag = np.sqrt(phix**2 + phiy**2)
 mag[np.logical_not(mask)] = np.nan
 
 
@@ -69,17 +76,18 @@ fig,ax = plt.subplots(1,3,
 alpha = 0.8
 LEVELS = 13
 
-ax[0].pcolor(XX,YY, phi, cmap=plt.cm.Purples, alpha=alpha, vmin=phimin, vmax=phimax)
-ax[0].contour(XX,YY, phi, 
+
+ax[0].pcolor(xx,yy, phi, cmap=plt.cm.Purples, alpha=alpha, vmin=phimin, vmax=phimax)
+ax[0].contour(xx,yy, phi, 
               levels=np.linspace(phimin,phimax, LEVELS), 
               colors='k', linewidths=2)
 
-ax[1].pcolor(XX,YY, psi, cmap=plt.cm.Greens, alpha=alpha, vmin=psimin, vmax=psimax)
-ax[1].contour(XX,YY, psi, 
+ax[1].pcolor(xx,yy, psi, cmap=plt.cm.Greens, alpha=alpha, vmin=psimin, vmax=psimax)
+ax[1].contour(xx,yy, psi, 
               levels=np.linspace(psimin, psimax, LEVELS), 
               colors='k', linewidths=2)
 
-ax[2].pcolor(XX, YY, mag, cmap=plt.cm.plasma)
+cax = ax[2].pcolor(xx, yy, mag, vmin=0, cmap=plt.cm.plasma)
 
 ax[0].set(aspect='equal', title=r'$\Phi(X,Y)$')
 ax[1].set(aspect='equal', title=r'$\Psi(X,Y)$')
@@ -87,15 +95,36 @@ ax[1].set(aspect='equal', title=r'$\Psi(X,Y)$')
 
 ax[2].set(aspect='equal', title=r'$||\nabla \Phi||$')
 
+fig.colorbar(cax)
+
 for axi in ax:
     axi.grid(ls='--', lw=0.5)
-    axi.set(xlabel=r'$X$', ylabel=r'$Y$')
+    axi.set(xlabel=r'$x$', ylabel=r'$y$', xlim=[-2,4], ylim=[0,4])
     # mask out the interior of circle at (p,0), radius b.
     xbathy = np.linspace(XX.min(), XX.max(), 500)
-    axi.fill(*semicircle(p, b), 
-                hatch='////', facecolor=[0,0,0,0], zorder=100, 
+    axi.fill(*semicircle(), 
+                hatch='////', facecolor='k', zorder=100, 
                 edgecolor='r')
-    
-    
+##
 
+fig.savefig('potential_flow_verhoff_2010.pdf', bbox_inches='tight')
 fig.show()
+
+# where is the max? What is the max relative to the "far field"?
+
+speed_farfied = mag[0,0]
+speed_idx_flat = np.nanargmax(mag)
+speed_idx = np.unravel_index(speed_idx_flat, mag.shape)
+
+print("MAX SPEED RELATIVE TO UPSTREAM SPEED:")
+print("%.2f"%mag[speed_idx])
+
+phix_m = phix*mask/mag
+phiy_m = phiy*mask/mag
+ax[2].streamplot(
+    xx,
+    yy,
+    phix_m, # yeah - supposed to be (-phiy, phix); not sure what I flipped.
+    phiy_m, 
+    color='w',
+    density=0.5)
