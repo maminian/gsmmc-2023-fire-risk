@@ -77,17 +77,17 @@ alpha = 0.8
 LEVELS = 13
 
 
-ax[0].pcolor(xx,yy, phi, cmap=plt.cm.Purples, alpha=alpha, vmin=phimin, vmax=phimax)
+ax[0].contourf(xx,yy, phi, cmap=plt.cm.Purples, alpha=alpha, vmin=phimin, vmax=phimax, levels=np.linspace(phimin,phimax, LEVELS))
 ax[0].contour(xx,yy, phi, 
               levels=np.linspace(phimin,phimax, LEVELS), 
               colors='k', linewidths=2)
 
-ax[1].pcolor(xx,yy, psi, cmap=plt.cm.Greens, alpha=alpha, vmin=psimin, vmax=psimax)
+ax[1].contourf(xx,yy, psi, cmap=plt.cm.Greens, alpha=alpha, vmin=psimin, vmax=psimax, levels=np.linspace(psimin, psimax, LEVELS))
 ax[1].contour(xx,yy, psi, 
               levels=np.linspace(psimin, psimax, LEVELS), 
               colors='k', linewidths=2)
 
-cax = ax[2].pcolor(xx, yy, mag, vmin=0, cmap=plt.cm.plasma)
+cax = ax[2].contourf(xx, yy, mag, levels=LEVELS, cmap=plt.cm.plasma)
 
 ax[0].set(aspect='equal', title=r'$\Phi(X,Y)$')
 ax[1].set(aspect='equal', title=r'$\Psi(X,Y)$')
@@ -127,4 +127,5 @@ ax[2].streamplot(
     phix_m, # yeah - supposed to be (-phiy, phix); not sure what I flipped.
     phiy_m, 
     color='w',
-    density=0.5)
+    density=0.5, 
+    zorder=1000)
