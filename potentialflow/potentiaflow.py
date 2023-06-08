@@ -7,7 +7,7 @@ def Omega(X,Y,p,b):
     return Z - p + (p-b)**2/(Z-p)
 def Phi(X,Y,p,b):
     return (X-p)*( 1 + (p-b)**2/((X-p)**2 + Y**2) )
-def Psi(X,Y,p,b):
+def Psi(X,Y,p,b): 
     return Y*( 1 - (p-b)**2/( (X-p)**2 + Y**2 ) )
 
 def semicircle(p, b):
@@ -30,6 +30,13 @@ psi = Psi(XX,YY, p,b)
 #
 
 # TODO: confirm this is actually the correct center/radius to use.
+# NOPE
+# p is the doublet location (Z=p + 0i)
+# b is the separation point (Z=b + 0i)
+
+####
+# TODO: need to map back to physical (x,y) first.
+####
 mask = ((XX-p)**2 + YY**2 >= b**2)
 
 phimin = phi[mask].min()
@@ -41,13 +48,20 @@ psimax = psi[mask].max()
 #phi = phi * mask
 #psi = psi * mask
 
+phix = np.gradient(phi, XX[0,:], axis=0)
+phiy = np.gradient(phi, YY[:,0], axis=1)
+
+mag = np.sqrt(phix[:,:]**2 + phiy[:,:]**2)
+mag[np.logical_not(mask)] = np.nan
+
+
 ######################
 # Visualization
 
 plt.rcParams.update({'font.size': 16})
 
-fig,ax = plt.subplots(1,2, 
-                      figsize=(8,4),
+fig,ax = plt.subplots(1,3, 
+                      figsize=(12,4),
                       sharex=True, sharey=True, constrained_layout=True)
 
 
@@ -65,8 +79,13 @@ ax[1].contour(XX,YY, psi,
               levels=np.linspace(psimin, psimax, LEVELS), 
               colors='k', linewidths=2)
 
+ax[2].pcolor(XX, YY, mag, cmap=plt.cm.plasma)
+
 ax[0].set(aspect='equal', title=r'$\Phi(X,Y)$')
 ax[1].set(aspect='equal', title=r'$\Psi(X,Y)$')
+
+
+ax[2].set(aspect='equal', title=r'$||\nabla \Phi||$')
 
 for axi in ax:
     axi.grid(ls='--', lw=0.5)

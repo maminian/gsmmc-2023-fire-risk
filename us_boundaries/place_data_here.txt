@@ -1,0 +1,5 @@
+Download json file "rows.json" from 
+
+https://catalog.data.gov/dataset/united-states-boundary-files/resource/c69158b0-085e-48b5-b839-9263b030f316
+
+and place it in this folder.
