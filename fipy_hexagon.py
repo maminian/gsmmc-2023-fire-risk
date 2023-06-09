@@ -59,18 +59,21 @@ valueBottomMiddle=-1
 
 X, Y=mesh.faceCenters
 
-facesbottomright=(mesh.facesBottom & (X>=0.5)) 
-facesbottomleft=(mesh.facesBottom & (X<0)) 
-facesbottommiddle=(mesh.facesBottom & (X>=0) & (X<0.5))
-faceslefttop=(mesh.facesLeft & (Y>0.5))
-
-phi.constrain(valueTop,mesh.facesTop)
+facesbottomright=(mesh.exteriorFaces & (X>=0.5) & (Y==0)) 
+facesbottomleft=(mesh.exteriorFaces & (X<0) & (Y==0.5)) 
+facesbottommiddle=(mesh.exteriorFaces & (X>=0) & (X<0.5) & (Y<=0.6))
+faceslefttop=(mesh.exteriorFaces & (X==-0.5))
+facesright=(mesh.exteriorFaces & (X==1))
+facestop=(mesh.exteriorFaces & (Y==1))
+phi.constrain(valueTop,facestop)
 phi.constrain(valueBottomRight,facesbottomright)
 phi.constrain(valueBottomMiddle, facesbottommiddle)  
 phi.constrain(valueBottomLeft, facesbottomleft)
-phi.constrain(valueRight, mesh.facesRight) 
+phi.constrain(valueRight, facesright) 
 phi.constrain(valueLeft, faceslefttop)  
 
+#exterior_faces=mesh.exteriorFaces
+#phi.constrain(0,exterior_faces)
 viewer = Viewer(vars=phi)
 eqX.solve(var=phi)
 viewer.plot()
