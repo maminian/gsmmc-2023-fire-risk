@@ -89,7 +89,7 @@ def scrape_data(state,sdate="20200101",edate="20201231"):
     elev = elev.astype(float)
     elev[elev < 0] = np.nan
     temp = temp.astype(float)
-    temp[temp < 150] = np.nan
+    temp[temp < -150] = np.nan
 
     # Note: the lat and lon coordinates line up, so we only need to extract them from one of the jsons.
     non_wind_data = np.dstack((lat,lon,elev,precip,temp))[0]
