@@ -38,7 +38,7 @@ ny=nx
 dx = 1.
 dy=dx
 pts = [(-0.5,0.5),(0, 0.5), (0.5, 0), (1,0), (1., 1.), (-0.5, 1)]
-mesh = gen_mesh(pts, 1)
+mesh = gen_mesh(pts, 0.01)
 phi = CellVariable(name="solution variable",
                    mesh=mesh,
                    value=0.)
@@ -52,20 +52,24 @@ eqX = DiffusionTerm(coeff=D)==-2
 L=1.
 valueLeft=0
 valueRight=0
-valueTopLeft=2
-valueTopRight=-2
-valueBottom=0
+valueTop=2
+valueBottomRight=1
+valueBottomLeft=2
+valueBottomMiddle=-1
 
 X, Y=mesh.faceCenters
 
-facestopright=(mesh.facesTop & (X>=L/2)) 
-facestopleft=(mesh.facesTop & (X<L/2)) 
+facesbottomright=(mesh.facesBottom & (X>=0.5)) 
+facesbottomleft=(mesh.facesBottom & (X<0)) 
+facesbottommiddle=(mesh.facesBottom & (X>=0) & (X<0.5))
+faceslefttop=(mesh.facesLeft & (Y>0.5))
 
-phi.constrain(valueTopLeft,facestopleft)
-phi.constrain(valueTopRight,facestopright)
-phi.constrain(valueBottom, mesh.facesBottom)  
+phi.constrain(valueTop,mesh.facesTop)
+phi.constrain(valueBottomRight,facesbottomright)
+phi.constrain(valueBottomMiddle, facesbottommiddle)  
+phi.constrain(valueBottomLeft, facesbottomleft)
 phi.constrain(valueRight, mesh.facesRight) 
-phi.constrain(valueLeft, mesh.facesLeft)  
+phi.constrain(valueLeft, faceslefttop)  
 
 viewer = Viewer(vars=phi)
 eqX.solve(var=phi)
