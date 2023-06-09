@@ -5,7 +5,7 @@ close all
 elev_data = load('elev.mat');
 lat_data = load('lat.mat');
 lon_data = load('lon.mat');
-elev = cell2mat(struct2cell(elev_data));
+elev = cell2mat(struct2cell(elev_data))/3.281; % convert feet to meters
 lat = cell2mat(struct2cell(lat_data));
 lon = cell2mat(struct2cell(lon_data));
 
@@ -34,9 +34,12 @@ figure;
 
 subplot(2,1,1);
 hold on
-plot(lon(1,:),slice,'LineWidth',2);
-plot(lon(1,:),new_h,'LineWidth',2);
-title(['Slice at latitude = ', num2str(lat(ind,1))]);
+plot(lon(1,:),slice,'black','LineWidth',2);
+plot(lon(1,:),new_h,'black','LineWidth',2);
+a = area(lon(1,:),new_h,1000);
+a.FaceColor = 'black';
+a.FaceAlpha = 0.3;
+title(['Topography at latitude = ', num2str(lat(ind,1))]);
 xlabel('Longitude');
 ylabel('Elevation');
 set(gca,'TickLength',[0.02, 0.05]);
@@ -62,9 +65,9 @@ g = 9.8;
 %% ode45 (Runge-Kutta)
 
 
-D1 = 10000; % subcritical
+D1 = 10000/3.281; % subcritical
 
-uvals = [240 250 260];
+uvals = [100 120 140];
 Fr_init = uvals.^2/(g*D1);
 
 % plot Froude number on separate vertical axis
@@ -140,7 +143,7 @@ colormap(map);
     ylabel('Wind speed');
 
     %legend(num2str(Fr_init'));
-    title(['Slice at latitude = ', num2str(lat(ind,1))]);
+    title('3 sample windspeed solutions');
 
     set(gca,'TickLength',[0.02, 0.05]);
     set(gca,'LineWidth',1);
