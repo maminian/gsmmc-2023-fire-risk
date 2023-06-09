@@ -18,27 +18,27 @@
 load "iovtk"
 
 // Geometry (Bump)
-real A = 0.5;
-real W = 10;
-real H = 100*A/10;
-real T = 4;
+real Hm = 3280; // ft
+real H = 15000;
+real W = 50000;
+real xc = 25000;
+real a = 5000;
 
-
-//real bump = ()[t]{
-//    return exp(-((t-T)/0.1)^2)/2;
-//};
-
-border b1(t=0,W){x=t; y=exp(-((t-T)/0.1)^2)*A; label=1;};
-border b2(t=0,1){x=W; y=(1-t)*exp(-((W-T)/0.1)^2)*A+t*H; label=2;};
-border b3(t=0,1){x=(1-t)*W; y=H; label=3;};
-border b4(t=0,1){x=0; y=(1-t)*H+t*exp(-((0-T)/0.1)^2)*A; label=4;};
+//border b1(t=0,W){x=t; y=exp(-((t-T)/0.1)^2)*A; label=1;};
+border b11(t=0,xc-a){x=t; y=0; label=11;};
+border b12(t=xc-a,xc+a){x=t; y = Hm*cos((pi/2)*(abs(t-xc)/a))^2; label=12;};
+border b13(t=xc+a,W){x=t; y=0; label=13;};
+border b2(t=0,H){x=W; y=t; label=2;};
+border b3(t=W,0){x=t; y=H; label=3;};
+border b4(t=H,0){x=0; y=t; label=4;};
 
 // Mesh
-mesh Th = buildmesh( b1(300) + b2(30) + b3(30) + b4(30));
+mesh Th = buildmesh( b11(40) + b12(100) + b13(40) + b2(63) + b3(30) + b4(63));
+plot(Th,wait=true,ps="stokes_mesh.eps");
 
 // Inflow
-real umax = 100;
-func uD = umax * (1.-((y-H)/H)^2);
+real umax = 15;
+//func uD = umax * (1.-((y-H)/H)^2);
 
 // Fespace
 fespace Uh(Th, P2);
@@ -53,13 +53,20 @@ macro Divergence(ux, uy) (dx(ux) + dy(uy)) //
 
 // Problem
 real fudgefactor = 1e6;
+real dynviscosity = 1;  // [ft^2/s] 
+real g = 0;             // ft/s^2
 solve stokes([u, v, p], [uu, vv, pp])
-  = int2d(Th)(Gradient(u)'*Gradient(uu) + Gradient(v)'*Gradient(vv)
+  = int2d(Th)(dynviscosity  * Gradient(u)'*Gradient(uu) + Gradient(v)'*Gradient(vv)
               - p*Divergence(uu,vv) - Divergence(u,v)*pp)
-  + int1d(Th,1)(fudgefactor * (u*N.x + v*N.y)*(uu*N.x + vv*N.y))          
-  + on(3, u=umax, v=0)
+  + int2d(Th)(g * vv)
+  + int1d(Th,11,12,13,3)(fudgefactor * (u*N.x + v*N.y)*(uu*N.x + vv*N.y))
   + on(4, u=umax, v=0)
   ;
 
 // Plot
-savevtk("stokes.vtk",Th,[u,v,0],p,dataname="app_vel app_pre");
+savevtk("stokes_bump_umax_"+umax+".vtk",Th,[u,v,0],p,dataname="app_vel app_pre");
+
+// Mesh size
+fespace Qh(Th, P0);
+Qh h = hTriangle;
+cout << "size of mesh = " << h[].max << endl;
