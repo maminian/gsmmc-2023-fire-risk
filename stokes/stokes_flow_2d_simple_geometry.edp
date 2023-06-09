@@ -1,0 +1,58 @@
+/****************************************************************************/
+/* This file is based on the tutorial stokes.edp of FreeFEM.                */
+/*                                                                          */
+/* FreeFEM is free software: you can redistribute it and/or modify          */
+/* it under the terms of the GNU Lesser General Public License as           */
+/* published by the Free Software Foundation, either version 3 of           */
+/* the License, or (at your option) any later version.                      */
+/*                                                                          */
+/* FreeFEM is distributed in the hope that it will be useful,               */
+/* but WITHOUT ANY WARRANTY; without even the implied warranty of           */
+/* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the            */
+/* GNU Lesser General Public License for more details.                      */
+/*                                                                          */
+/* You should have received a copy of the GNU Lesser General Public License */
+/* along with FreeFEM. If not, see <http://www.gnu.org/licenses/>.          */
+/****************************************************************************/
+
+load "iovtk"
+
+// Geometry
+real a = 0.5;
+real b = 0.5;
+real W = 3;
+real H = 1;
+border b1(t=0,1){x=t*b;         y=(1-t)*a; label=1;};
+border b2(t=0,1){x=(1-t)*b+t*W; y=0;       label=2;};
+border b3(t=0,1){x=W;           y=t*H;     label=3;};
+border b4(t=0,1){x=(1-t)*W;     y=H;       label=4;};
+border b5(t=0,1){x=0;           y=(1-t)*H+t*a; label=5;};
+
+// Mesh
+mesh Th = buildmesh( b1(15) + b2(20) + b3(10) + b4(30) + b5(15));
+
+// Inflow
+real umax = 1;
+func uD = umax * (1.-((y-(a+H)/2.)/((a+H)/2.))^2);
+
+// Fespace
+fespace Uh(Th, P2);
+Uh u, v;
+Uh uu, vv;
+fespace Ph(Th, P1);
+Ph p, pp;
+
+// Macro
+macro Gradient(u) [dx(u), dy(u)] //
+macro Divergence(ux, uy) (dx(ux) + dy(uy)) //
+
+// Problem
+solve stokes([u, v, p], [uu, vv, pp])
+  = int2d(Th)(Gradient(u)'*Gradient(uu) + Gradient(v)'*Gradient(vv)
+              - p*Divergence(uu,vv) - Divergence(u,v)*pp)
+  + on(1, 2, 4, u=0, v=0)
+  + on(5, u=uD, v=0)
+  ;
+
+// Plot
+savevtk("stokes.vtk",Th,[u,v,0],p,dataname="app_vel app_pre");
