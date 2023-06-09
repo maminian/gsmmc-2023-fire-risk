@@ -19,7 +19,7 @@ def semicircle():
     _y = 0 + 1*np.sin(th)
     return _x,_y
 
-xx, yy = np.meshgrid( np.linspace(-2,4,100), np.linspace(0,4,100) )
+xx, yy = np.meshgrid( np.linspace(-2,4,300), np.linspace(0,4,300) )
 
 p = 1.8
 b = 1
