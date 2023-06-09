@@ -2,11 +2,33 @@ clear;
 clc;
 close all
 
-N = 1000;
+elev_data = load('test.mat');
+data = cell2mat(struct2cell(elev_data));
+
+figure;
+surf(data);
+colorbar
+hold on
+
+
+
+
+slice = data(30,:);
+new_h = smoothdata(slice);
+
+
+figure;
+hold on
+plot(slice);
+plot(new_h);
+
+
+N = size(new_h,2);
 
 xspan = linspace(-1,2,N);
 %h = exp(-((xspan-1)/.1).^2)/2;
-h = -exp(-((xspan-1/2)/.1).^2)/2 + exp(-(xspan/.1).^2)/2;
+%h = -exp(-((xspan-1/2)/.1).^2)/2 + exp(-(xspan/.1).^2)/2;
+h = new_h;
 dh = gradient(h)./gradient(xspan);
 g = 9.8;
 
@@ -14,13 +36,13 @@ g = 9.8;
 %% ode45 (Runge-Kutta)
 
 
-u1 = 5;
-Dvals = 5; % subcritical
+u1 = 180; % only JUST big enough to break!!
+Dvals = 10000; % subcritical
 %uvals = 12;
 
 figure;
 hold on
-plot(xspan,h,'LineWidth',2);
+%plot(xspan,h,'LineWidth',2);
 
 for j=1:size(Dvals,2)
     D1 = Dvals(j);
@@ -56,7 +78,7 @@ D = u1*D1./y;
     
     xlabel('x');
 
-    legend('topography','flow speed','Froude number');
+    legend('flow speed','Froude number');
 
     set(gca,'TickLength',[0.02, 0.05]);
     set(gca,'LineWidth',1);
