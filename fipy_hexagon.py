@@ -33,11 +33,15 @@ def gen_mesh(pts,cellSize):
 
     return mesh
 
-nx = 50
-ny=nx
-dx = 1.
-dy=dx
-pts = [(-0.5,0.5),(0, 0.5), (0.5, 0), (1,0), (1., 1.), (-0.5, 1)]
+#pts = [(-0.5,0.5),(0, 0.5), (0.5, 0), (1,0), (1., 1.), (-0.5, 1)]
+x_max=2
+x_min=-0.5*x_max
+x_length=x_max-x_min
+y_min=0
+y_max=2
+h=-x_min
+pts = [(x_min,h),(x_length/3+x_min, h), (2*x_length/3+x_min, y_min), (x_max,y_min), (x_max,y_max), (x_min, y_max)]
+
 mesh = gen_mesh(pts, 0.01)
 phi = CellVariable(name="solution variable",
                    mesh=mesh,
@@ -50,21 +54,21 @@ D=1
 eqX = DiffusionTerm(coeff=D)==-2
 
 L=1.
-valueLeft=0
-valueRight=0
+valueLeft=2
+valueRight=2
 valueTop=2
-valueBottomRight=1
-valueBottomLeft=2
-valueBottomMiddle=-1
+valueBottomRight=0
+valueBottomLeft=0
+valueBottomMiddle=0
 
 X, Y=mesh.faceCenters
 
-facesbottomright=(mesh.exteriorFaces & (X>=0.5) & (Y==0)) 
-facesbottomleft=(mesh.exteriorFaces & (X<0) & (Y==0.5)) 
-facesbottommiddle=(mesh.exteriorFaces & (X>=0) & (X<0.5) & (Y<=0.6))
-faceslefttop=(mesh.exteriorFaces & (X==-0.5))
-facesright=(mesh.exteriorFaces & (X==1))
-facestop=(mesh.exteriorFaces & (Y==1))
+facesbottomright=(mesh.exteriorFaces & (X>=2*x_length+x_min) & (Y==y_min)) 
+facesbottomleft=(mesh.exteriorFaces & (X<x_length/3+x_min) & (Y==h)) 
+facesbottommiddle=(mesh.exteriorFaces & (X>=x_length/3+x_min) & (X<2*x_length+x_min) & (Y<=h+0.1))
+faceslefttop=(mesh.exteriorFaces & (X==x_min))
+facesright=(mesh.exteriorFaces & (X==x_max))
+facestop=(mesh.exteriorFaces & (Y==y_max))
 phi.constrain(valueTop,facestop)
 phi.constrain(valueBottomRight,facesbottomright)
 phi.constrain(valueBottomMiddle, facesbottommiddle)  
