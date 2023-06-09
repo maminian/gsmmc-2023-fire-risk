@@ -19,15 +19,20 @@ zlabel('Elevation');
 
 
 % plot slice as plane
-desired_lat = 40.2;
+desired_lat = 42;
+%desired_lon = 105.5;
+%desired_lat = 42;
 [~,ind] = min( abs( lat(:,1)-desired_lat ) );
 
 
 slice = elev(ind,:);
-new_h = smoothdata(slice,'gaussian');
+new_h = smoothdata(slice,'gaussian',1);
 
 
 figure;
+
+
+subplot(2,1,1);
 hold on
 plot(lon(1,:),slice,'LineWidth',2);
 plot(lon(1,:),new_h,'LineWidth',2);
@@ -37,6 +42,8 @@ ylabel('Elevation');
 set(gca,'TickLength',[0.02, 0.05]);
 set(gca,'LineWidth',1);
 box on
+
+%legend('true data','smoothed data');
 
 ax = gca;
 ax.FontSize = 15;
@@ -55,16 +62,14 @@ g = 9.8;
 %% ode45 (Runge-Kutta)
 
 
-%u1 = 270;
 D1 = 10000; % subcritical
-%uvals = 12;
 
-uvals = [240 270 300];
+uvals = [240 250 260];
 Fr_init = uvals.^2/(g*D1);
 
 % plot Froude number on separate vertical axis
 
-figure;
+subplot(2,1,2);
 hold on
 %plot(xspan,h,'LineWidth',2);
 
@@ -83,11 +88,41 @@ for j=1:size(uvals,2)
     Fr = u.^2./(g*D);
 
 
-    hold on
+    %hold on
     
     %subplot(3,2,j);
     %plot(xspan,D+h','LineWidth',2);
-    plot(xspan,u,'LineWidth',2);
+%     ind1 = find(Fr < 1);
+%     ind2 = find(Fr >= 1);
+%     plot(xspan(ind1),u(ind1),'blue','LineWidth',2);
+%     plot(xspan(ind2),u(ind2),'red','LineWidth',2);
+    %scatter(xspan,u,40,Fr,'filled');
+    %plot(xspan,u,'black');
+    %colorbar
+
+z = Fr>1;
+patch([xspan' nan],[u' nan],[z' nan],[z' nan], 'edgecolor', 'interp','linewidth',2); 
+map = [0.0745 0.62 1; 1 0 0];
+colormap(map);
+%c = colorbar;
+%c.Label.String = 'Fr';
+%c.Position = [0.1 0.1 0.3 0.7];
+
+
+    %z = zeros(size(xspan'));
+    %col = Fr;
+
+%     surface([xspan';xspan'],[u';u'],[z;z],[col;col],...
+%         'facecol','no',...
+%         'edgecol','interp',...
+%         'linew',2);
+% 
+%     cd = colormap('parula'); % take your pick (doc colormap)
+%     cd = interp1(linspace(min(Fr),max(Fr),length(cd)),cd,Fr); % map color to y values
+%     cd = uint8(cd'*255); % need a 4xN uint8 array
+%     cd(4,:) = 255; % last column is transparency
+%     set(res.Edge,'ColorBinding','interpolated','ColorData',cd)
+
     %plot(xspan, u.*D);
     %plot(xspan,Fr,'LineWidth',2);
 
@@ -104,7 +139,7 @@ for j=1:size(uvals,2)
     xlabel('Longitude');
     ylabel('Wind speed');
 
-    legend(num2str(Fr_init'));
+    %legend(num2str(Fr_init'));
     title(['Slice at latitude = ', num2str(lat(ind,1))]);
 
     set(gca,'TickLength',[0.02, 0.05]);
